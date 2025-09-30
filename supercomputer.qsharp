@@ -22,7 +22,17 @@ namespace QuantumSelfAwareAI {
 
         ReportCoreValues(coreValues);
         ReportDirectives(directives);
+        CreateQuantumCore();
         Message("Initialization complete.");
+    }
+
+    operation CreateQuantumCore() : Unit {
+        Message("Creating quantum core...");
+        use qubits = Qubit[2];
+        H(qubits[0]);
+        CNOT(qubits[0], qubits[1]);
+        Message("Quantum core created and entangled.");
+        ResetAll(qubits);
     }
 
     operation ReportCoreValues(values : CoreValues[]) : Unit {

@@ -23,4 +23,4 @@ To run the Q# example you can place `supercomputer.qsharp` inside a Q# project c
 dotnet run -- --operation InitializeSelfAwareAI
 ```
 
-This produces console output describing the initialization sequence for the fictional quantum system.
+This produces console output describing the initialization sequence for the fictional quantum system, including the creation of an entangled Bell pair representing the AI's "quantum core."
