@@ -1,0 +1,6 @@
+# Ignore Swiftly installer files
+swiftly-*.tar.gz
+.swift-version
+LICENSE.txt
+.local/
+ai-state.json

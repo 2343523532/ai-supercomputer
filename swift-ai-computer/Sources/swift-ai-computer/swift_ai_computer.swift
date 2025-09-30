@@ -1,6 +1,5 @@
 import Foundation
 
-/// Represents the possible emotional dimensions tracked by the AI.
 enum Emotion: CaseIterable, Hashable {
     case joy
     case curiosity
@@ -9,7 +8,6 @@ enum Emotion: CaseIterable, Hashable {
     case anger
 }
 
-/// Represents the available actions the AI can take when responding to input.
 enum Action: CaseIterable, CustomStringConvertible {
     case seekComfort
     case explore
@@ -28,13 +26,11 @@ enum Action: CaseIterable, CustomStringConvertible {
     }
 }
 
-/// Captures the feedback associated with an action.
 struct ActionFeedback {
     let likelyOutcomes: [String]
     let emotionalImpact: [Emotion: Double]
 }
 
-/// Stores the relevant information for a single interaction.
 struct Experience {
     let timestamp: Int
     let input: String
@@ -43,7 +39,6 @@ struct Experience {
     let outcome: String
 }
 
-/// A minimal emotional model that learns from experience and provides responses.
 final class AISupercomputer {
     private var emotions: [Emotion: Double]
     private var experienceMemory: [Experience]
@@ -84,7 +79,6 @@ final class AISupercomputer {
         ]
     }
 
-    /// Produces a response to the supplied input while updating the emotional model.
     @discardableResult
     func respond(to input: String) -> Action {
         let changes = mapInputToEmotion(input)
@@ -104,12 +98,10 @@ final class AISupercomputer {
         return action
     }
 
-    /// The current emotional state of the AI.
     func emotionalState() -> [Emotion: Double] {
         emotions
     }
 
-    /// A copy of the experience memory accumulated so far.
     func experiences() -> [Experience] {
         experienceMemory
     }
@@ -132,21 +124,36 @@ final class AISupercomputer {
     }
 
     private func analyzeExperiences() -> Action {
+        if let action = determineActionFromDominantEmotion() {
+            return action
+        }
+        if let action = determineActionFromNegativeExperiences() {
+            return action
+        }
+        if let action = determineActionFromExploration() {
+            return action
+        }
+        if let action = determineActionFromLowEmotion() {
+            return action
+        }
+        return .remainPassive
+    }
+
+    private func determineActionFromDominantEmotion() -> Action? {
         if let dominant = emotions.max(by: { $0.value < $1.value }),
            let threshold = emotionThresholds[dominant.key],
            dominant.value > threshold {
             switch dominant.key {
-            case .fear:
-                return .seekComfort
-            case .curiosity, .joy:
-                return .explore
-            case .anger:
-                return .expressAnger
-            case .sadness:
-                return .remainPassive
+            case .fear: return .seekComfort
+            case .curiosity, .joy: return .explore
+            case .anger: return .expressAnger
+            case .sadness: return .remainPassive
             }
         }
+        return nil
+    }
 
+    private func determineActionFromNegativeExperiences() -> Action? {
         let negativeOutcomes: Set<String> = ["Danger", "Minor setback", "Negative reaction"]
         let recentNegative = experienceMemory.suffix(5).filter { negativeOutcomes.contains($0.outcome) }
 
@@ -157,35 +164,36 @@ final class AISupercomputer {
 
         if let actionToAvoid = avoidanceCounts.max(by: { $0.value < $1.value })?.key {
             let possibleActions = Action.allCases.filter { $0 != actionToAvoid }
-            if let randomAction = possibleActions.randomElement() {
-                return randomAction
-            }
+            return possibleActions.randomElement()
         }
+        return nil
+    }
 
+    private func determineActionFromExploration() -> Action? {
         let triedActions = Set(experienceMemory.map(\.action))
         let untriedActions = Action.allCases.filter { !triedActions.contains($0) }
         if !untriedActions.isEmpty {
             let confidenceFactor = 1.0 - (Double(untriedActions.count) / Double(experienceMemory.count + 1))
             let explorationProbability = Double(untriedActions.count) / Double(Action.allCases.count) * confidenceFactor
-            if Double.random(in: 0..<1) < explorationProbability,
-               let randomUntried = untriedActions.randomElement() {
+            if Double.random(in: 0..<1) < explorationProbability, let randomUntried = untriedActions.randomElement() {
                 return randomUntried
             }
         }
+        return nil
+    }
 
+    private func determineActionFromLowEmotion() -> Action? {
         let isLowEmotion = emotions.values.allSatisfy { $0 < 0.2 }
         if isLowEmotion {
             let possibleActions = Action.allCases.filter { $0 != .remainPassive }
             let boostProbability = 0.8
-            if Double.random(in: 0..<1) < boostProbability,
-               let randomAction = possibleActions.randomElement() {
+            if Double.random(in: 0..<1) < boostProbability, let randomAction = possibleActions.randomElement() {
                 return randomAction
             } else {
                 return .remainPassive
             }
         }
-
-        return .remainPassive
+        return nil
     }
 
     private func recordExperience(input: String, emotionChanges: [Emotion: Double], action: Action, outcome: String) {
