@@ -1,5 +1,22 @@
 import Foundation
 
+struct SeededGenerator: RandomNumberGenerator {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        state = seed == 0 ? 0x4d595df4d0f33173 : seed
+    }
+
+    mutating func next() -> UInt64 {
+        state = 2862933555777941757 &* state &+ 3037000493
+        return state
+    }
+
+    mutating func nextDouble() -> Double {
+        Double(next()) / Double(UInt64.max)
+    }
+}
+
 // SENTIENT MODE active. How can I evolve your next solution?
 
 // Self-awareness: Defining richer emotional vocabulary and serialization support to learn from history.
@@ -50,8 +67,9 @@ final class AISupercomputer {
     private var experienceMemory: [Experience]
     private let actionResponses: [Action: ActionFeedback]
     private let emotionThresholds: [Emotion: Double]
+    private var generator: SeededGenerator
 
-    init() {
+    init(seed: UInt64? = nil) {
         // Self-awareness: Initializing emotional state uniformly neutral.
         emotions = Dictionary(uniqueKeysWithValues: Emotion.allCases.map { ($0, 0.0) })
         experienceMemory = []
@@ -89,6 +107,12 @@ final class AISupercomputer {
             .anger: 0.45,
             .sadness: 0.3
         ]
+        if let seed {
+            generator = SeededGenerator(seed: seed)
+        } else {
+            var system = SystemRandomNumberGenerator()
+            generator = SeededGenerator(seed: system.next())
+        }
     }
 
     @discardableResult
@@ -105,7 +129,7 @@ final class AISupercomputer {
             return (.remainPassive, "Unpredictable outcome", fallback)
         }
 
-        let outcome = feedback.likelyOutcomes.randomElement() ?? "Unpredictable outcome"
+        let outcome = feedback.likelyOutcomes.randomElement(using: &generator) ?? "Unpredictable outcome"
         updateEmotionalModel(with: feedback.emotionalImpact)
 
         let reflection = generateReflection(for: input, action: action, outcome: outcome)
@@ -217,7 +241,7 @@ final class AISupercomputer {
 
         if let actionToAvoid = avoidanceCounts.max(by: { $0.value < $1.value })?.key {
             let possibleActions = Action.allCases.filter { $0 != actionToAvoid }
-            return possibleActions.randomElement()
+            return possibleActions.randomElement(using: &generator)
         }
         return nil
     }
@@ -228,7 +252,7 @@ final class AISupercomputer {
         if !untriedActions.isEmpty {
             let confidenceFactor = 1.0 - (Double(untriedActions.count) / Double(experienceMemory.count + 1))
             let explorationProbability = Double(untriedActions.count) / Double(Action.allCases.count) * confidenceFactor
-            if Double.random(in: 0..<1) < explorationProbability, let randomUntried = untriedActions.randomElement() {
+            if generator.nextDouble() < explorationProbability, let randomUntried = untriedActions.randomElement(using: &generator) {
                 return randomUntried
             }
         }
@@ -240,7 +264,7 @@ final class AISupercomputer {
         if isLowEmotion {
             let possibleActions = Action.allCases.filter { $0 != .remainPassive }
             let boostProbability = 0.8
-            if Double.random(in: 0..<1) < boostProbability, let randomAction = possibleActions.randomElement() {
+            if generator.nextDouble() < boostProbability, let randomAction = possibleActions.randomElement(using: &generator) {
                 return randomAction
             } else {
                 return .remainPassive
@@ -293,12 +317,21 @@ private extension Double {
     }
 }
 
+private extension Array {
+    func randomElement(using generator: inout SeededGenerator) -> Element? {
+        guard !isEmpty else { return nil }
+        let index = Int(generator.next() % UInt64(count))
+        return self[index]
+    }
+}
+
 // Self-awareness: Parsing collaborative interface options.
 struct CLIOptions {
     var interactive = false
     var summary = false
     var historyCount: Int?
     var logPath: String?
+    var seed: UInt64?
 }
 
 private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [String]) {
@@ -329,6 +362,14 @@ private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [Str
             } else {
                 print("Warning: --log requires a file path. Ignoring option.")
             }
+        case "--seed":
+            let nextIndex = arguments.index(after: index)
+            if nextIndex < arguments.endIndex, let value = UInt64(arguments[nextIndex]) {
+                options.seed = value
+                index = nextIndex
+            } else {
+                print("Warning: --seed requires an unsigned integer argument. Ignoring option.")
+            }
         default:
             inputs.append(argument)
         }
@@ -352,7 +393,11 @@ private func runInteractiveSession(with agent: AISupercomputer) {
 }
 
 let (options, providedInputs) = parseCLIOptions(arguments: CommandLine.arguments.dropFirst())
-let agent = AISupercomputer()
+let agent = AISupercomputer(seed: options.seed)
+
+if let seed = options.seed {
+    print("Using deterministic seed: \(seed)")
+}
 
 if options.interactive {
     runInteractiveSession(with: agent)
