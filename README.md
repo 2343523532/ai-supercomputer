@@ -46,8 +46,9 @@ The executable supports several collaborative options to explore the agent's beh
 | `--summary` | Print a detailed emotional summary and recent experiences after processing inputs. |
 | `--history <n>` | Emit a summary of the last `n` experiences (defaults to 5 when `n` is omitted). Works alone or alongside `--summary`. |
 | `--log <path>` | Export the recorded experiences as a JSON document so you can visualise or analyse them later. |
+| `--seed <n>` | Run the simulation with a deterministic random seed (unsigned integer) so outcomes can be reproduced exactly. |
 
-Inputs supplied after the options are processed sequentially. Each input maps its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust). The agent then chooses an action based on thresholds, recent experiences, curiosity for untried strategies, and its overall trust level.
+Inputs supplied after the options are processed sequentially. Each input maps its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust). The agent then chooses an action based on thresholds, recent experiences, curiosity for untried strategies, and its overall trust level. When a seed is provided, every stochastic choice (such as outcomes or exploratory actions) is replayable for debugging or demonstrations.
 
 ### Programmatic usage
 
