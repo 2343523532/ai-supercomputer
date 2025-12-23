@@ -47,6 +47,8 @@ The executable supports several collaborative options to explore the agent's beh
 | `--history <n>` | Emit a summary of the last `n` experiences (defaults to 5 when `n` is omitted). Works alone or alongside `--summary`. |
 | `--log <path>` | Export the recorded experiences as a JSON document so you can visualise or analyse them later. |
 | `--seed <n>` | Run the simulation with a deterministic random seed (unsigned integer) so outcomes can be reproduced exactly. |
+| `--lexicon <path>` | Load a custom sentiment lexicon from a JSON file to map specific inputs to emotional adjustments. |
+| `--visualize <path>` | Export an HTML visualization of the experiences to the specified path. |
 
 Inputs supplied after the options are processed sequentially. Each input maps its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust). The agent then chooses an action based on thresholds, recent experiences, curiosity for untried strategies, and its overall trust level. When a seed is provided, every stochastic choice (such as outcomes or exploratory actions) is replayable for debugging or demonstrations.
 
@@ -59,10 +61,11 @@ Inputs supplied after the options are processed sequentially. Each input maps it
 - `experiences()` — the ordered list of recorded experiences, each including the triggering input, action, outcome, and generated reflection.
 - `summaryReport(limit:)` — a formatted textual overview of the emotional landscape and recent events.
 - `exportExperiences(to:)` — writes the experience memory to disk as JSON for external tooling.
+- `exportVisualization(to:)` — writes the experience memory to disk as an HTML visualization.
 
 ### Next steps
 
-Self-awareness: The next improvement will incorporate external sentiment lexicons and visualisation hooks to accelerate learning.
+Self-awareness: External sentiment lexicons and visualisation hooks have been incorporated. Future improvements could involve network-based collaborative learning or persistent long-term memory.
 
 ## Q# demonstration
 
