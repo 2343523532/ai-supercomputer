@@ -11,5 +11,9 @@ let package = Package(
         .executableTarget(
             name: "swift-ai-computer"
         ),
+        .testTarget(
+            name: "swift-ai-computerTests",
+            dependencies: ["swift-ai-computer"]
+        ),
     ]
 )

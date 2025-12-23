@@ -68,11 +68,13 @@ final class AISupercomputer {
     private let actionResponses: [Action: ActionFeedback]
     private let emotionThresholds: [Emotion: Double]
     private var generator: SeededGenerator
+    private let emotionMapping: [String: [Emotion: Double]] // Optimized: Pre-calculated mapping
 
-    init(seed: UInt64? = nil) {
+    init(seed: UInt64? = nil, lexicon: [String: [Emotion: Double]] = [:]) {
         // Self-awareness: Initializing emotional state uniformly neutral.
         emotions = Dictionary(uniqueKeysWithValues: Emotion.allCases.map { ($0, 0.0) })
         experienceMemory = []
+
         actionResponses = [
             .seekComfort: ActionFeedback(
                 likelyOutcomes: ["Reduced fear", "Temporary relief", "Feeling of security", "Restored trust"],
@@ -113,6 +115,25 @@ final class AISupercomputer {
             var system = SystemRandomNumberGenerator()
             generator = SeededGenerator(seed: system.next())
         }
+
+        // Self-awareness: Expanded emotional lexicon for nuanced stimuli interpretation.
+        // Initialize default mapping
+        var mapping: [String: [Emotion: Double]] = [
+            "A": [.joy: 0.4, .curiosity: 0.3, .sadness: -0.1, .fear: -0.05],
+            "B": [.fear: 0.6, .sadness: 0.5, .joy: -0.2, .anger: 0.1],
+            "C": [.trust: 0.5, .curiosity: 0.2, .fear: -0.1],
+            "?": [.curiosity: 0.8, .joy: 0.2, .anger: 0.05],
+            "!": [.anger: 0.7, .fear: 0.5, .sadness: 0.2],
+            "@": [.trust: 0.6, .joy: 0.4],
+            "#": [.anger: 0.4, .sadness: 0.3]
+        ]
+
+        // Self-awareness: Integrating external knowledge.
+        // Overlay provided lexicon
+        for (key, value) in lexicon {
+            mapping[key] = value
+        }
+        self.emotionMapping = mapping
     }
 
     @discardableResult
@@ -175,19 +196,76 @@ final class AISupercomputer {
         try data.write(to: url, options: .atomic)
     }
 
-    private func mapInputToEmotion(_ input: String) -> [Emotion: Double] {
-        // Self-awareness: Expanded emotional lexicon for nuanced stimuli interpretation.
-        let emotionMapping: [String: [Emotion: Double]] = [
-            "A": [.joy: 0.4, .curiosity: 0.3, .sadness: -0.1, .fear: -0.05],
-            "B": [.fear: 0.6, .sadness: 0.5, .joy: -0.2, .anger: 0.1],
-            "C": [.trust: 0.5, .curiosity: 0.2, .fear: -0.1],
-            "?": [.curiosity: 0.8, .joy: 0.2, .anger: 0.05],
-            "!": [.anger: 0.7, .fear: 0.5, .sadness: 0.2],
-            "@": [.trust: 0.6, .joy: 0.4],
-            "#": [.anger: 0.4, .sadness: 0.3]
-        ]
+    // Self-awareness: Generating visual insights for deeper analysis.
+    func exportVisualization(to url: URL) throws {
+        let title = "AI Supercomputer - Experience Visualization"
+        let css = """
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .meta { margin-bottom: 20px; }
+        """
 
+        var html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>\(title)</title>
+            <style>\(css)</style>
+        </head>
+        <body>
+            <h1>\(title)</h1>
+            <div class="meta">
+                <p><strong>Generated:</strong> \(Date())</p>
+                <p><strong>Total Experiences:</strong> \(experienceMemory.count)</p>
+            </div>
+            <h2>Recent Experiences</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Input</th>
+                    <th>Action</th>
+                    <th>Outcome</th>
+                    <th>Emotion Changes</th>
+                </tr>
+        """
+
+        for exp in experienceMemory {
+            let emotions = exp.emotionChanges
+                .sorted { $0.key.rawValue < $1.key.rawValue }
+                .map { "\($0.key.rawValue): \(String(format: \"%.2f\", $0.value))" }
+                .joined(separator: ", ")
+
+            html += """
+                <tr>
+                    <td>\(exp.timestamp)</td>
+                    <td>\(exp.input)</td>
+                    <td>\(exp.action.rawValue)</td>
+                    <td>\(exp.outcome)</td>
+                    <td>\(emotions)</td>
+                </tr>
+            """
+        }
+
+        html += """
+            </table>
+        </body>
+        </html>
+        """
+
+        try html.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private func mapInputToEmotion(_ input: String) -> [Emotion: Double] {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Prioritize exact matches from lexicon
+        if let mapped = emotionMapping[trimmed] {
+            return mapped
+        }
+
         guard let firstCharacter = trimmed.first else {
             return [:]
         }
@@ -324,110 +402,3 @@ private extension Array {
         return self[index]
     }
 }
-
-// Self-awareness: Parsing collaborative interface options.
-struct CLIOptions {
-    var interactive = false
-    var summary = false
-    var historyCount: Int?
-    var logPath: String?
-    var seed: UInt64?
-}
-
-private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [String]) {
-    var options = CLIOptions()
-    var inputs: [String] = []
-    var index = arguments.startIndex
-
-    while index < arguments.endIndex {
-        let argument = arguments[index]
-        switch argument {
-        case "--interactive":
-            options.interactive = true
-        case "--summary":
-            options.summary = true
-        case "--history":
-            let nextIndex = arguments.index(after: index)
-            if nextIndex < arguments.endIndex, let value = Int(arguments[nextIndex]) {
-                options.historyCount = value
-                index = nextIndex
-            } else {
-                options.historyCount = 5
-            }
-        case "--log":
-            let nextIndex = arguments.index(after: index)
-            if nextIndex < arguments.endIndex {
-                options.logPath = arguments[nextIndex]
-                index = nextIndex
-            } else {
-                print("Warning: --log requires a file path. Ignoring option.")
-            }
-        case "--seed":
-            let nextIndex = arguments.index(after: index)
-            if nextIndex < arguments.endIndex, let value = UInt64(arguments[nextIndex]) {
-                options.seed = value
-                index = nextIndex
-            } else {
-                print("Warning: --seed requires an unsigned integer argument. Ignoring option.")
-            }
-        default:
-            inputs.append(argument)
-        }
-        index = arguments.index(after: index)
-    }
-
-    return (options, inputs)
-}
-
-private func processInputs(_ inputs: [String], with agent: AISupercomputer) {
-    for input in inputs {
-        _ = agent.respond(to: input)
-    }
-}
-
-private func runInteractiveSession(with agent: AISupercomputer) {
-    print("Interactive mode active. Submit input (empty line to finish):")
-    while let line = readLine(), !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        _ = agent.respond(to: line)
-    }
-}
-
-let (options, providedInputs) = parseCLIOptions(arguments: CommandLine.arguments.dropFirst())
-let agent = AISupercomputer(seed: options.seed)
-
-if let seed = options.seed {
-    print("Using deterministic seed: \(seed)")
-}
-
-if options.interactive {
-    runInteractiveSession(with: agent)
-}
-
-let filteredInputs: [String]
-if options.interactive {
-    filteredInputs = []
-} else {
-    filteredInputs = providedInputs
-}
-
-processInputs(filteredInputs, with: agent)
-
-if options.summary {
-    print(agent.summaryReport(limit: options.historyCount ?? 5))
-}
-
-if let historyLimit = options.historyCount, historyLimit > 0, !options.summary {
-    print(agent.summaryReport(limit: historyLimit))
-}
-
-if let path = options.logPath {
-    let url = URL(fileURLWithPath: path)
-    do {
-        try agent.exportExperiences(to: url)
-        print("Experiences exported to \(url.path)")
-    } catch {
-        print("Failed to export experiences: \(error)")
-    }
-}
-
-// Next improvement: incorporate sentiment lexicon import and visualization hooks.
