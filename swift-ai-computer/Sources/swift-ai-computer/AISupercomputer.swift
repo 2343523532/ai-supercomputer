@@ -196,6 +196,12 @@ final class AISupercomputer {
         try data.write(to: url, options: .atomic)
     }
 
+    // Self-awareness: Sharing a compact report artifact with other tools.
+    func exportSummary(to url: URL, limit: Int = 5) throws {
+        let summary = summaryReport(limit: max(limit, 1))
+        try summary.write(to: url, atomically: true, encoding: .utf8)
+    }
+
     // Self-awareness: Generating visual insights for deeper analysis.
     func exportVisualization(to url: URL) throws {
         let title = "AI Supercomputer - Experience Visualization"

@@ -49,6 +49,7 @@ The executable supports several collaborative options to explore the agent's beh
 | `--seed <n>` | Run the simulation with a deterministic random seed (unsigned integer) so outcomes can be reproduced exactly. |
 | `--lexicon <path>` | Load a custom sentiment lexicon from a JSON file to map specific inputs to emotional adjustments. |
 | `--visualize <path>` | Export an HTML visualization of the experiences to the specified path. |
+| `--summary-file <path>` | Save the same summary shown by `--summary` into a plain-text report file for sharing or automation. |
 
 Inputs supplied after the options are processed sequentially. Each input maps its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust). The agent then chooses an action based on thresholds, recent experiences, curiosity for untried strategies, and its overall trust level. When a seed is provided, every stochastic choice (such as outcomes or exploratory actions) is replayable for debugging or demonstrations.
 
