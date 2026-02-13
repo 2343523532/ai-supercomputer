@@ -42,4 +42,22 @@ final class swift_ai_computerTests: XCTestCase {
         // Check for table cell content instead of input format
         XCTAssertTrue(content.contains("<td>A</td>"))
     }
+
+    func testSummaryExport() throws {
+        let agent = AISupercomputer(seed: 42)
+        agent.respond(to: "A")
+        agent.respond(to: "?")
+
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("summary.txt")
+        try? FileManager.default.removeItem(at: tempURL)
+
+        try agent.exportSummary(to: tempURL, limit: 2)
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: tempURL.path))
+        let content = try String(contentsOf: tempURL)
+        XCTAssertTrue(content.contains("Emotional state —"))
+        XCTAssertTrue(content.contains("Recent experiences:"))
+        XCTAssertTrue(content.contains("Input: A"))
+    }
+
 }

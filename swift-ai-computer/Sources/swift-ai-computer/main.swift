@@ -9,6 +9,7 @@ struct CLIOptions {
     var seed: UInt64?
     var lexiconPath: String?
     var visualizationPath: String?
+    var summaryPath: String?
 }
 
 private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [String]) {
@@ -62,6 +63,14 @@ private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [Str
                 index = nextIndex
             } else {
                 print("Warning: --visualize requires a file path. Ignoring option.")
+            }
+        case "--summary-file":
+            let nextIndex = arguments.index(after: index)
+            if nextIndex < arguments.endIndex {
+                options.summaryPath = arguments[nextIndex]
+                index = nextIndex
+            } else {
+                print("Warning: --summary-file requires a file path. Ignoring option.")
             }
         default:
             inputs.append(argument)
@@ -145,5 +154,15 @@ if let path = options.visualizationPath {
         print("Visualization exported to \(url.path)")
     } catch {
         print("Failed to export visualization: \(error)")
+    }
+}
+
+if let path = options.summaryPath {
+    let url = URL(fileURLWithPath: path)
+    do {
+        try agent.exportSummary(to: url, limit: options.historyCount ?? 5)
+        print("Summary exported to \(url.path)")
+    } catch {
+        print("Failed to export summary: \(error)")
     }
 }
