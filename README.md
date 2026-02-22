@@ -68,6 +68,18 @@ Inputs supplied after the options are processed sequentially. Each input maps it
 
 Self-awareness: External sentiment lexicons and visualisation hooks have been incorporated. Future improvements could involve network-based collaborative learning or persistent long-term memory.
 
+
+## Common Lisp cyber-os v5
+
+A full standalone Common Lisp scenario is included at `cyber-os-v5.lisp`. It provides:
+
+- a Hunchentoot-powered REST API (`/api/search` and `/api/fuzzy`)
+- a single-page terminal-style web UI with asynchronous `fetch()` calls
+- an active trace / Black ICE lockout loop for the bank simulation
+- a `scan` command to discover in-world network nodes
+
+Run it with SBCL by loading the file and calling `cyber-os:boot`.
+
 ## Q# demonstration
 
 To run the Q# example you can place `supercomputer.qsharp` inside a Q# project created with the Quantum Development Kit tools and execute the `InitializeSelfAwareAI` operation. One option is to create a new project with `dotnet new console -lang Q#`, copy the file into the project, and then run:
