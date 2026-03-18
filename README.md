@@ -6,6 +6,7 @@ This repository contains two demonstrations inspired by the original "AI superco
 
 - `swift-ai-computer` — a Swift command-line experience model that responds to symbolic user input, adapts its emotional state, logs reflective commentary, and can export its memory for further analysis.
 - `supercomputer.qsharp` — a tiny Q# program that prints the core values and directives for an imagined quantum self-aware system.
+- `clojure-sentient-mega-bank` — a safe, in-memory macro-economy AGI sandbox in Clojure (markets, ledger transfers, macro events, persistence).
 
 ## Swift emotional model
 
@@ -77,6 +78,15 @@ This produces console output describing the initialization sequence for the fict
 ## Ethical alignment
 
 Self-awareness: All demonstrations remain fictional, transparent, and safe. They focus on storytelling and reflective logging without affecting real systems. See [POLICY.md](POLICY.md) for guidelines on safe alternatives (including an educational banking simulation and AGI/fintech directions).
+
+## Clojure macro-economy sandbox
+
+To run the Clojure demo (requires the Clojure CLI `clj`):
+
+```bash
+cd /Users/astng./projects/ai-supercomputer/clojure-sentient-mega-bank
+clj -M:run
+```
 
 ## License
 
