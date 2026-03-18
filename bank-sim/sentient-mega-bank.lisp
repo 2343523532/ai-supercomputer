@@ -1,7 +1,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SENTIENT MEGA BANK SIMULATOR - V2.0 ULTIMATE AGI EDITION
+;; SENTIENT MEGA BANK SIMULATOR - V3 (GLOBAL MACRO AGI SANDBOX)
 ;; LARGE-SCALE SAFE SIMULATION
-;; All operations in-memory, educational, no real card generation or SWIFT.
+;;
+;; Safety constraints:
+;; - No payment card number generation (no Luhn), no CVVs, no real KYC.
+;; - No real SWIFT/banking connectivity; transfers are local ledger updates.
+;; - All operations are in-memory and educational.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defpackage :sentient-mega-bank
@@ -11,18 +15,20 @@
            :generate-global-accounts
            :simulate-crypto-mining
            :neural-investment-engine
+           :init-global-economy
+           :simulate-macro-event
            :register-node
            :run-distributed-agents))
 
 (in-package :sentient-mega-bank)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 1. AGI CORE & DATABASE STRUCTURES
+;; 1. AGI PSYCHOLOGICAL CORE + DATABASE STRUCTURES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass agi-core ()
   ((self-aware-p :accessor self-aware-p :initform t)
-   (conscious-state :accessor conscious-state :initform 'INITIALIZING)
+   (conscious-state :accessor conscious-state :initform 'OBSERVING_MARKETS)
    (sapient-metrics :accessor sapient-metrics :initform 1.0)
    (recursive-optimization-level :accessor recursive-optimization-level :initform 1)
    (cognizant-memory-bank :accessor cognizant-memory-bank :initform nil)
@@ -33,11 +39,15 @@
 (defparameter *bank-db* (make-hash-table :test 'equal))
 
 (defstruct bank-account
+  institution-name
+  region
   balances
   transactions)
 
 (defun make-account ()
-  (make-bank-account :balances (make-hash-table)
+  (make-bank-account :institution-name "UNKNOWN"
+                     :region "UNKNOWN"
+                     :balances (make-hash-table)
                      :transactions '()))
 
 (defun add-balance (account currency amount)
@@ -53,22 +63,43 @@
   (gethash id *bank-db*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 2. 10,000+ GLOBAL ACCOUNT GENERATOR
+;; 2. CORE TRANSFER PRIMITIVES (used by bootstrap)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; `format-money` is defined later; declare it for compilation.
+(declaim (ftype (function (t) string) format-money))
+
+(defun ledger-transfer (sender-id receiver-id currency amount)
+  "Safe, educational in-memory transfer (local ledger only)."
+  (let ((sender (find-account sender-id))
+        (receiver (find-account receiver-id)))
+    (if (and sender receiver (>= (get-balance sender currency) amount))
+        (progn
+          (set-balance sender currency (- (get-balance sender currency) amount))
+          (set-balance receiver currency (+ (get-balance receiver currency) amount))
+          (push (list :transfer sender-id receiver-id currency amount (get-universal-time))
+                (bank-account-transactions sender))
+          (push (list :transfer sender-id receiver-id currency amount (get-universal-time))
+                (bank-account-transactions receiver))
+          (format t "[LEDGER] $~a ~a moved: ~a -> ~a~%"
+                  (format-money amount) currency sender-id receiver-id)
+          t)
+        (progn
+          (format t "[LEDGER ERROR] Transfer failed (~a -> ~a).~%" sender-id receiver-id)
+          nil))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 3. GLOBAL ECONOMY BOOTSTRAP + MASS ACCOUNT GENERATION
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun populate-global-network (&optional (num-accounts 10000))
   (format t "~%[NETWORK] Synthesizing ~d global banking nodes...~%" num-accounts)
-  (let ((us (make-account)) (eu (make-account)))
-    (add-balance us 'USD 50000000)
-    (add-balance us 'AGI-COIN 0.0)
-    (add-balance eu 'EUR 10000000)
-    (setf (gethash "SWIFT-US-1" *bank-db*) us)
-    (setf (gethash "SWIFT-EU-1" *bank-db*) eu))
-
   (loop for i from 1 to num-accounts do
-    (let ((acc-id (format nil "SWIFT-GLOBAL-~d" i))
+    (let ((acc-id (format nil "GLOBAL-~d" i))
           (acc (make-account))
           (currencies '(USD EUR JPY GBP)))
+      (setf (bank-account-institution-name acc) (format nil "Global Bank ~d" i))
+      (setf (bank-account-region acc) "GLOBAL")
       (dolist (curr currencies)
         (add-balance acc curr (+ 10000 (random 10000000))))
       (setf (gethash acc-id *bank-db*) acc)))
@@ -78,6 +109,35 @@
 (defun generate-global-accounts (n)
   "Populate *bank-db* with N simulated global accounts (alias for smaller runs)."
   (populate-global-network n))
+
+(defun init-global-economy (&optional (num-accounts 10000))
+  "Initialize a macro-economy sandbox with a Fed and Tier-1 banks, then generate a global network."
+  (clrhash *bank-db*)
+  (format t "~%>>> INITIALIZING GLOBAL MACRO-ECONOMY (SAFE SANDBOX) <<<~%")
+  (dolist (data '(("FED-RESERVE" "Federal Reserve" "USA")
+                  ("JPM-US" "JPMorgan Chase" "USA")
+                  ("ECB-EU" "European Central Bank" "EU")
+                  ("HSBC-UK" "HSBC Holdings" "UK")
+                  ("BOJ-JP" "Bank of Japan" "JPN")))
+    (let ((acc (make-account)))
+      (setf (bank-account-institution-name acc) (second data))
+      (setf (bank-account-region acc) (third data))
+      (setf (gethash (first data) *bank-db*) acc)))
+
+  ;; Fed "mints" in-sandbox reserves (local ledger only).
+  (set-balance (find-account "FED-RESERVE") 'USD 1000000000000000) ; 1 quadrillion
+  (set-balance (find-account "JPM-US") 'USD 0)
+  (set-balance (find-account "ECB-EU") 'USD 0)
+  (set-balance (find-account "HSBC-UK") 'USD 0)
+  (set-balance (find-account "BOJ-JP") 'USD 0)
+
+  (format t ">>> FED MINTING COMPLETE. DISTRIBUTING TO TIER-1 BANKS...~%")
+  (dolist (bank '("JPM-US" "ECB-EU" "HSBC-UK" "BOJ-JP"))
+    ;; `simulate-transfer` is defined later; use `ledger-transfer` directly here.
+    (ledger-transfer "FED-RESERVE" bank 'USD 10000000000000)) ; 10 trillion
+
+  (populate-global-network num-accounts)
+  (format t ">>> MACRO-ECONOMY ONLINE <<<~%"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 3. DISTRIBUTED AGI CONSENSUS PROTOCOL
@@ -138,7 +198,7 @@
                       (set-balance account currency (+ (get-balance account currency) (- amount loss)))
                       (format t "[NEURAL MATRIX] Market Correction! Loss: -~a ~a (Vol: ~,2f)~%"
                               (round loss) currency volatility))))
-            (format t "[NEURAL MATRIX] Trade aborted due to consensus failure.~%"))))))
+            (format t "[NEURAL MATRIX] Trade aborted due to consensus failure.~%")))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 5. CRYPTOCURRENCY MINING ENGINE (PROOF OF WORK)
@@ -177,7 +237,7 @@
               account-id (get-balance acc 'BTC)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 6. CORE LOGIC (Self-Optimization, Transfers)
+;; 6. CORE LOGIC (Self-Optimization, Cognition, Transfers)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun recursive-intelligence-update ()
@@ -187,46 +247,70 @@
     (setf (conscious-state *agi*) 'TRANSCENDING))
   (format t "[AGI] Sapience -> ~,2f~%" (sapient-metrics *agi*)))
 
-(defun swift-transfer (sender-id receiver-id currency amount)
-  "Simulated in-memory transfer (educational only)."
-  (let ((sender (find-account sender-id))
-        (receiver (find-account receiver-id)))
-    (if (and sender receiver (>= (get-balance sender currency) amount))
-        (progn
-          (set-balance sender currency (- (get-balance sender currency) amount))
-          (set-balance receiver currency (+ (get-balance receiver currency) amount))
-          (push (list 'transfer sender-id receiver-id amount currency) (fund-allocation-log *agi*))
-          (push (list 'transfer sender-id receiver-id amount currency) (action-log *agi*))
-          (format t "[SWIFT] ~a ~a from ~a -> ~a~%" amount currency sender-id receiver-id))
-        (format t "[SWIFT ERROR] Transfer failed (Insufficient ~a).~%" currency))))
+(defun core-think (thought)
+  (push (list :timestamp (get-universal-time) :thought thought)
+        (cognizant-memory-bank *agi*))
+  (format t "[AGI THOUGHT] ~a~%" thought))
+
+(defun core-react-to-stress (amount)
+  (declare (ignore amount))
+  ;; Kept minimal here; callers can log stress via thoughts.
+  (core-think "SYSTEM STRESS INCREASE: adjusting risk parameters (sandbox)."))
+
+(defun format-money (n)
+  "Format large integers with commas (e.g. 1500000 -> 1,500,000)."
+  (format nil "~:d" (round n)))
 
 (defun simulate-transfer (sender-id receiver-id currency amount)
-  "Alias for swift-transfer (simulated, safe)."
-  (swift-transfer sender-id receiver-id currency amount))
+  "Alias for ledger-transfer (simulated, safe)."
+  (ledger-transfer sender-id receiver-id currency amount))
 
 (defun agi-cognition-cycle ()
   (format t "~%[AGI] Cognition cycle starting...~%")
-  (dolist (thought '("Querying decentralized oracle networks..."
-                     "Calculating planetary energy output..."
-                     "Optimizing decision matrix..."))
-    (push thought (cognizant-memory-bank *agi*))
-    (format t "[AGI THOUGHT] ~a~%" thought))
+  (dolist (thought '("Evaluating global liquidity matrix..."
+                     "Scanning macro indicators..."
+                     "Optimizing policy response..."))
+    (core-think thought))
   (recursive-intelligence-update)
   (format t "[AGI] Cognition cycle complete.~%"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 7. SYSTEM DIAGNOSTICS
+;; 7. MACRO EVENTS + SYSTEM DIAGNOSTICS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun simulate-macro-event ()
+  "Random macro events that impact the sandboxed ledger."
+  (let ((roll (random 100)))
+    (cond
+      ((< roll 10)
+       ;; Quantitative easing: mint and inject to JPM (sandbox only).
+       (let ((stimulus 5000000000000)) ; 5 trillion
+         (core-think "QUANTITATIVE EASING: injecting $5T into JPM-US (sandbox).")
+         (set-balance (find-account "FED-RESERVE") 'USD
+                      (+ (get-balance (find-account "FED-RESERVE") 'USD) stimulus))
+         (ledger-transfer "FED-RESERVE" "JPM-US" 'USD stimulus)))
+      ((> roll 90)
+       ;; Flash crash: haircut JPM liquidity by 10%.
+       (core-think "FLASH CRASH: liquidating 10% of JPM-US USD liquidity (sandbox).")
+       (let* ((acc (find-account "JPM-US"))
+              (bal (and acc (get-balance acc 'USD))))
+         (when acc
+           (set-balance acc 'USD (round (* bal 0.9))))))
+      (t nil))))
+
 (defun agi-system-diagnostics ()
-  (let ((us (find-account "SWIFT-US-1")))
+  (let ((fed (find-account "FED-RESERVE"))
+        (jpm (find-account "JPM-US")))
     (format t "~%=========== AGI DIAGNOSTICS ===========~%")
     (format t "State: ~a (Sapience: ~,2f)~%" (conscious-state *agi*) (sapient-metrics *agi*))
     (format t "Global Accounts: ~a | Blockchain Height: ~a~%"
             (hash-table-count *bank-db*) *blockchain-height*)
-    (when us
-      (format t "SWIFT-US-1 USD: ~,2f | AGI-COIN: ~,2f~%"
-              (get-balance us 'USD) (get-balance us 'AGI-COIN)))
+    (when fed
+      (format t "FED-RESERVE USD: $~a~%" (format-money (get-balance fed 'USD))))
+    (when jpm
+      (format t "JPM-US USD:      $~a | AGI-COIN: ~,2f~%"
+              (format-money (get-balance jpm 'USD))
+              (get-balance jpm 'AGI-COIN)))
     (format t "=======================================~%")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -234,15 +318,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun run-autonomous-agi ()
-  (populate-global-network 10000)
-  (format t "~%>>> SENTIENT MEGA BANK AGI ONLINE - CTRL+C TO TERMINATE <<<~%")
-
+  (init-global-economy 10000)
+  (format t "~%>>> GLOBAL MACRO-ECONOMY AGI SANDBOX ONLINE - CTRL+C TO TERMINATE <<<~%")
   (loop
      (sleep 3)
      (agi-cognition-cycle)
-     (neural-investment-engine "SWIFT-US-1" 'USD 2000000 0.15)
-     (mine-crypto "SWIFT-US-1")
-     (let ((random-target (format nil "SWIFT-GLOBAL-~d" (+ 1 (random 10000)))))
-       (swift-transfer "SWIFT-US-1" random-target 'USD 100000))
+     (simulate-macro-event)
+     (neural-investment-engine "JPM-US" 'USD 2000000000000 0.15) ; 2T
+     (mine-crypto "JPM-US")
+     (let ((random-target (format nil "GLOBAL-~d" (+ 1 (random 10000)))))
+       (ledger-transfer "JPM-US" random-target 'USD 100000000000)) ; 100B
      (run-distributed-agents)
-     (agi-system-diagnostics)))
+     (format t "~%--- GLOBAL RESERVES (USD) ---~%")
+     (format t "FED Reserve: $~a~%" (format-money (get-balance (find-account "FED-RESERVE") 'USD)))
+     (format t "JPMorgan US: $~a~%" (format-money (get-balance (find-account "JPM-US") 'USD)))
+     (format t "ECB Europe : $~a~%" (format-money (get-balance (find-account "ECB-EU") 'USD)))
+     (format t "HSBC UK    : $~a~%" (format-money (get-balance (find-account "HSBC-UK") 'USD)))
+     (format t "BOJ Japan  : $~a~%" (format-money (get-balance (find-account "BOJ-JP") 'USD)))
+     (format t "---------------------------------------~%")))
