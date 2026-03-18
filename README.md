@@ -92,7 +92,7 @@ This produces console output describing the initialization sequence for the fict
 
 ## Ethical alignment
 
-Self-awareness: All demonstrations remain fictional, transparent, and safe. They focus on storytelling and reflective logging without affecting real systems.
+Self-awareness: All demonstrations remain fictional, transparent, and safe. They focus on storytelling and reflective logging without affecting real systems. See [POLICY.md](POLICY.md) for guidelines on safe alternatives (including an educational banking simulation and AGI/fintech directions).
 
 ## License
 
