@@ -1,6 +1,5 @@
 (ns sentient-mega-bank.core
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]))
 
 ;; Safety constraints:
 ;; - No payment card number generation (no Luhn), no CVVs, no real KYC.
@@ -17,9 +16,24 @@
          :awareness-level 0.5
          :confidence 0.5
          :system-load 0.0
-         :goals ["control_inflation" "maximize_global_liquidity" "market_dominance"]
+         :goals ["control_inflation" "maximize_global_liquidity" "market_dominance" "infinite_scaling"]
          :performance-score 0.5
-         :agi-version 1.0}))
+         :agi-version 1.0
+         ;; V5 ASI super-system metrics.
+         :knowledge 10.0
+         :efficiency 1.0
+         :adaptability 1.0
+         :stability 1.0
+         :decisions-made 0}))
+
+(defn rand-uniform [a b]
+  (+ a (rand (- b a))))
+
+(defn rand-int-range [a b]
+  (+ a (rand-int (inc (- b a)))))
+
+(defn get-time-str []
+  (format "[%tT]" (java.util.Date.)))
 
 (defn core-think [thought]
   (swap! agi
@@ -28,7 +42,7 @@
                (update :cognizant-memory-bank conj {:timestamp (System/currentTimeMillis)
                                                    :thought thought})
                (update :awareness-level + 0.01))))
-  (println (str "[AGI THOUGHT] " thought)))
+  (println (str (get-time-str) " [AGI BANKING THOUGHT] " thought)))
 
 (defn core-react-to-stress [amount]
   (swap! agi update :system-load #(min 1.0 (+ % amount)))
@@ -45,6 +59,145 @@
                  (assoc :conscious-state :TRANSCENDING_MARKETS))))
     (println (format "\n[!!! AGI EVOLUTION !!!] Neural Architecture Upgraded to Version %.2f"
                      (:agi-version @agi)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 1B. V5 ASI COGNITIVE UTILITIES + MODULE REGISTRY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn evaluate-impact [base]
+  (* base (rand-uniform 0.8 1.2)))
+
+(defn update-memory [state event impact-score]
+  (-> state
+      (update :cognizant-memory-bank conj {:event event
+                                           :impact impact-score
+                                           :time (System/currentTimeMillis)})
+      (update :knowledge + impact-score)))
+
+(defn adapt
+  ([state] (adapt state 1.0))
+  ([state factor]
+   (-> state
+       (update :efficiency * (+ 1.0 (* 0.02 factor)))
+       (update :adaptability * (+ 1.0 (* 0.015 factor)))
+       (update :stability * (+ 1.0 (* 0.01 factor))))))
+
+(defn feedback-loop [state]
+  (let [recent (take 5 (:cognizant-memory-bank state))
+        impacts (keep :impact recent)]
+    (if (empty? impacts)
+      state
+      (let [avg-impact (/ (reduce + impacts) (count impacts))]
+        (if (> avg-impact 5.0)
+          (update state :efficiency * 1.05)
+          (update state :stability * 1.03))))))
+
+(defn make-module [log-label event-name generator mutate-fn adapt-factor]
+  {:log log-label
+   :fn (fn [state]
+         (let [{:keys [base impact delta]} (generator state)
+               impact (or impact (evaluate-impact base))
+               delta (long (or delta (max 1 impact)))]
+           (-> state
+               (update :decisions-made + delta)
+               (mutate-fn base)
+               (update-memory event-name impact)
+               (adapt adapt-factor)
+               (feedback-loop))))})
+
+(def cognitive-modules
+  [(make-module "AGI: multi-domain reasoning..." "AGI reasoning cycle"
+                (fn [s]
+                  (let [complexity (Math/log (+ (:knowledge s) 1.0))
+                        base (* complexity 2.0)]
+                    {:base base}))
+                (fn [base] (fn [s] (update s :knowledge + (* base 0.5))))
+                1.2)
+   (make-module "ASI: extreme optimization..." "ASI optimization burst"
+                (fn [s] {:base (* (:efficiency s) 2.0)})
+                (fn [base] (fn [s] (update s :efficiency + (* base 0.1))))
+                1.5)
+   (make-module "Cognitive Engine: pattern synthesis..." "Pattern recognition"
+                (fn [_] (let [patterns (rand-int-range 1 10)] {:base patterns}))
+                (fn [base] (fn [s] (update s :knowledge + base)))
+                1.0)
+   (make-module "Neural System: weighted signal processing..." "Neural signal processed"
+                (fn [_] (let [signal (rand-uniform 0.5 2.0)] {:base (* signal 3.0)}))
+                (fn [base] (fn [s] (update s :efficiency * (max 0.75 (/ base 3.0)))))
+                1.0)
+   (make-module "Quantum Processor: probabilistic exploration..." "Quantum state exploration"
+                (fn [_] (let [u (rand-uniform 1.0 5.0)] {:base (* u 5.0)}))
+                (fn [base] (fn [s] (update s :knowledge + (* base 0.4))))
+                1.3)
+   (make-module "Exascale: massive computation..." "Exascale compute"
+                (fn [_] (let [p (rand-uniform 5.0 10.0)] {:base (* p 6.0)}))
+                (fn [base] (fn [s] (update s :knowledge + (* base 0.35))))
+                1.5)
+   (make-module "Predictive Core: forecasting outcomes..." "Prediction made"
+                (fn [_]
+                  (let [prediction (rand-uniform 0.0 1.0)
+                        accuracy (Math/abs (- prediction 0.5))]
+                    {:base (* accuracy 10.0)}))
+                (fn [_] identity)
+                1.0)
+   (make-module "Digital Consciousness: state awareness..." "Awareness cycle"
+                (fn [s] (let [aw (* (count (:cognizant-memory-bank s)) 0.05)] {:base (* aw 6.0)}))
+                (fn [base] (fn [s] (update s :adaptability + (/ base 6.0))))
+                1.0)
+   (make-module "Meta-Learning: synthesis and transfer..." "Meta learning"
+                (fn [_] {:base (* (rand-uniform 0.5 1.5) 6.0)})
+                (fn [_] (fn [s] (update s :knowledge * (rand-uniform 1.0 1.2))))
+                1.4)
+   (make-module "Memory Consolidator: compressing traces..." "Memory compression"
+                (fn [s] {:base (max 1.0 (/ (count (:cognizant-memory-bank s)) 10.0))})
+                (fn [base] (fn [s] (update s :stability + (* base 0.02))))
+                0.9)
+   (make-module "Risk Engine: volatility hedging..." "Risk hedging"
+                (fn [_] {:base (rand-uniform 1.0 8.0)})
+                (fn [base] (fn [s] (update s :stability + (* base 0.01))))
+                1.1)
+   (make-module "Portfolio Planner: strategic allocation..." "Portfolio allocation"
+                (fn [_] {:base (rand-uniform 2.0 12.0)})
+                (fn [base] (fn [s] (update s :confidence + (* base 0.002))))
+                1.0)
+   (make-module "Constraint Solver: policy optimization..." "Constraint optimization"
+                (fn [_] {:base (rand-uniform 1.0 6.0)})
+                (fn [base] (fn [s] (update s :efficiency + (* base 0.03))))
+                1.2)
+   (make-module "Temporal Modeler: scenario branching..." "Scenario branching"
+                (fn [_] {:base (rand-uniform 1.0 9.0)})
+                (fn [base] (fn [s] (update s :adaptability + (* base 0.02))))
+                1.1)
+   (make-module "Graph Inference: network topology scan..." "Topology scan"
+                (fn [_] {:base (rand-uniform 1.0 7.0)})
+                (fn [base] (fn [s] (update s :knowledge + (* base 0.6))))
+                1.0)
+   (make-module "Signal Fusion: multimodal coherence..." "Signal fusion"
+                (fn [_] {:base (rand-uniform 0.5 4.0)})
+                (fn [base] (fn [s] (update s :efficiency + (* base 0.05))))
+                1.0)
+   (make-module "Goal Arbitration: objective balancing..." "Goal arbitration"
+                (fn [_] {:base (rand-uniform 1.0 5.0)})
+                (fn [_] identity)
+                1.0)
+   (make-module "Causal Discovery: intervention learning..." "Causal discovery"
+                (fn [_] {:base (rand-uniform 1.0 10.0)})
+                (fn [base] (fn [s] (update s :knowledge + (* base 0.45))))
+                1.2)
+   (make-module "Stability Guard: anomaly damping..." "Anomaly damping"
+                (fn [_] {:base (rand-uniform 1.0 3.0)})
+                (fn [base] (fn [s] (update s :stability + (* base 0.05))))
+                0.8)
+   (make-module "Autonomy Kernel: self-directive synthesis..." "Self-directive synthesis"
+                (fn [_] {:base (rand-uniform 2.0 11.0)})
+                (fn [base] (fn [s] (update s :confidence + (* base 0.003))))
+                1.3)])
+
+(defn run-asi-cycle! []
+  (let [module (rand-nth cognitive-modules)]
+    ;; Log outside swap! so retries never duplicate log lines.
+    (println (str (get-time-str) " " (:log module)))
+    (swap! agi (:fn module))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 2. DATABASES (BANKS + MARKETS)
