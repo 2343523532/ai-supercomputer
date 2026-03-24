@@ -100,7 +100,7 @@
                delta (long (or delta (max 1 impact)))]
            (-> state
                (update :decisions-made + delta)
-               (mutate-fn base)
+               ((mutate-fn base))
                (update-memory event-name impact)
                (adapt adapt-factor)
                (feedback-loop))))})
