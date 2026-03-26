@@ -70,6 +70,21 @@ Inputs supplied after the options are processed sequentially. Each input maps it
 Self-awareness: External sentiment lexicons and visualisation hooks have been incorporated. Future improvements could involve network-based collaborative learning or persistent long-term memory.
 
 
+
+## Quantum super AI (Common Lisp)
+
+A complete standalone Common Lisp simulation is available at `quantum_ai.lisp`. It runs a multi-cycle cognition + fictional finance demo with:
+
+- bounded Common Lisp `random` usage (`(random 1.0)`, `(random 10)`, etc.)
+- Luhn-valid 16-digit card generation formatted in readable 4-digit groups
+- deterministic cycle orchestration via `run-cycle` and `run-demo`
+
+Run it directly with:
+
+```bash
+sbcl --script quantum_ai.lisp
+```
+
 ## Common Lisp cyber-os v5
 
 A full standalone Common Lisp scenario is included at `cyber-os-v5.lisp`. It provides:
