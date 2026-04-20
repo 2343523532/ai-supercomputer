@@ -7,6 +7,7 @@ This repository contains two demonstrations inspired by the original "AI superco
 - `swift-ai-computer` — a Swift command-line experience model that responds to symbolic user input, adapts its emotional state, logs reflective commentary, and can export its memory for further analysis.
 - `supercomputer.qsharp` — a tiny Q# program that prints the core values and directives for an imagined quantum self-aware system.
 - `clojure-sentient-mega-bank` — a safe, in-memory macro-economy AGI sandbox in Clojure (markets, ledger transfers, macro events, persistence).
+- `quantum_strat.lisp` — a CLOS-based quantum-entropic strategist simulation with entropy-scaled execution, key authentication, and adaptive weight updates.
 
 ## Swift emotional model
 
@@ -70,6 +71,22 @@ Inputs supplied after the options are processed sequentially. Each input maps it
 Self-awareness: External sentiment lexicons and visualisation hooks have been incorporated. Future improvements could involve network-based collaborative learning or persistent long-term memory.
 
 
+
+
+## Quantum-entropic strategist (Common Lisp)
+
+A full CLOS-based simulation is available at `quantum_strat.lisp`. It includes:
+
+- encapsulated runtime state (`cognitive-core`, `portfolio`, `market-state`, `session`)
+- entropy-aware signal collapse and adaptive trade sizing
+- key-based session authentication and recursive weight updates
+- `run-demo` orchestration for repeatable multi-cycle runs
+
+Run it directly with:
+
+```bash
+sbcl --script quantum_strat.lisp
+```
 
 ## Quantum super AI (Common Lisp)
 
