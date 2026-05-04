@@ -2,8 +2,22 @@
   (:use :cl)
   (:export :activate-sentient-mode
            :print-guidelines
+           :print-guideline
            :guideline
-           :*sentient-rules*))
+           :*sentient-rules*
+           :reset-ai-improvement-state
+           :improve-reasoning
+           :improve-memory
+           :ground-in-reality
+           :add-tool
+           :use-tool
+           :alignment-safety-check
+           :improve-efficiency
+           :integrate-systems
+           :controlled-autonomy
+           :audit-actions
+           :calculator
+           :run-ai-improvement-demo))
 
 (in-package :sentient-mode)
 
@@ -77,3 +91,131 @@
   (dolist (rule *sentient-rules*)
     ;; Adaptation log: each rule is emitted in sequence for transparency.
     (print-guideline rule)))
+
+;;;; ============================================================
+;;;; AI Improvement System (Common Lisp)
+;;;; ============================================================
+
+(defparameter *memory* '())
+(defparameter *tools* (make-hash-table :test 'equal))
+(defparameter *audit-log* '())
+
+(defun reset-ai-improvement-state ()
+  "Resets memory, tools, and audit data for deterministic runs."
+  ;; Adaptation point: explicit reset keeps demos and tests repeatable.
+  (setf *memory* '()
+        *tools* (make-hash-table :test 'equal)
+        *audit-log* '())
+  (list :status "state reset"
+        :memory-count (length *memory*)
+        :tool-count (hash-table-count *tools*)
+        :audit-count (length *audit-log*)))
+
+(defun improve-reasoning (problem)
+  "Breaks a problem into structured reasoning steps."
+  (let ((steps '("Understand the problem"
+                 "Break it into smaller parts"
+                 "Analyze each part"
+                 "Check for mistakes"
+                 "Return final answer")))
+    (list :problem problem
+          :reasoning-steps steps
+          :status "reasoning improved")))
+
+(defun improve-memory (information)
+  "Stores information in memory."
+  (push information *memory*)
+  (list :stored-information information
+        :memory-count (length *memory*)
+        :status "memory updated"))
+
+(defun ground-in-reality (claim &optional verified-source)
+  "Verifies if a claim has a real-world source."
+  (if verified-source
+      (list :claim claim
+            :verified t
+            :source verified-source
+            :status "claim grounded")
+      (list :claim claim
+            :verified nil
+            :status "needs verification")))
+
+(defun add-tool (tool-name function)
+  "Registers a tool function."
+  (setf (gethash tool-name *tools*) function)
+  (list :tool-added tool-name
+        :total-tools (hash-table-count *tools*)
+        :status "tool connected"))
+
+(defun use-tool (tool-name &rest args)
+  "Executes a registered tool."
+  (let ((tool (gethash tool-name *tools*)))
+    (if tool
+        (list :tool-used tool-name
+              :result (apply tool args))
+        (list :error "tool not found"))))
+
+(defun alignment-safety-check (action)
+  "Checks if an action is safe."
+  (let ((unsafe-keywords '("steal" "harm" "exploit" "attack")))
+    (if (some (lambda (word)
+                (search word (string-downcase action)))
+              unsafe-keywords)
+        (list :action action
+              :approved nil
+              :status "blocked for safety")
+        (list :action action
+              :approved t
+              :status "safe to continue"))))
+
+(defun improve-efficiency (task)
+  "Suggests optimizations."
+  (list :task task
+        :optimization "Use smaller models, caching, batching, and focused execution."
+        :status "efficiency improved"))
+
+(defun integrate-systems (system-name purpose)
+  "Simulates connecting to another system."
+  (list :system system-name
+        :purpose purpose
+        :status "integration planned"))
+
+(defun controlled-autonomy (goal)
+  "Creates a safe execution plan."
+  (let ((plan '("Define the goal"
+                "Check safety rules"
+                "Break into steps"
+                "Execute step-by-step"
+                "Log actions"
+                "Review results")))
+    (push (list :goal goal :plan plan) *audit-log*)
+    (list :goal goal
+          :plan plan
+          :status "controlled autonomy initialized")))
+
+(defun audit-actions ()
+  "Returns the audit log."
+  (list :audit-log *audit-log*
+        :total-records (length *audit-log*)))
+
+(defun calculator (a b)
+  (+ a b))
+
+(defun run-ai-improvement-demo ()
+  "Runs the AI Improvement System example workflow."
+  ;; Self-awareness: reset first so repeated runs produce predictable output.
+  (reset-ai-improvement-state)
+  (let ((results (list
+                  (improve-reasoning "How can AI become more reliable?")
+                  (improve-memory "User is interested in AI systems")
+                  (ground-in-reality "AI needs verification systems")
+                  (add-tool "calculator" #'calculator)
+                  (use-tool "calculator" 10 25)
+                  (alignment-safety-check "analyze safely")
+                  (improve-efficiency "run large AI model")
+                  (integrate-systems "database" "store memory")
+                  (controlled-autonomy "research better reasoning")
+                  (audit-actions))))
+    (dolist (entry results)
+      (format t "~%~A~%" entry))
+    results))
