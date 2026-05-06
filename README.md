@@ -11,7 +11,7 @@ This repository contains two demonstrations inspired by the original "AI superco
 
 ## Swift emotional model
 
-The Swift target is packaged as an executable SwiftPM project located in `swift-ai-computer`. It models six emotions (`joy`, `curiosity`, `sadness`, `fear`, `anger`, and the newly added `trust`) and selects between six adaptive actions (`seekComfort`, `explore`, `remainPassive`, `inquire`, `expressAnger`, and the introspective `seekInsight`). Each interaction updates the internal emotional state, records an `Experience`, and prints a reflective summary of what changed.
+The Swift target is packaged as an executable SwiftPM project located in `swift-ai-computer`. It models six emotions (`joy`, `curiosity`, `sadness`, `fear`, `anger`, and `trust`) and selects between eight adaptive actions (`seekComfort`, `explore`, `remainPassive`, `inquire`, `expressAnger`, `seekInsight`, `deescalate`, and `synthesizePlan`). Each interaction updates the internal emotional state, records an enriched `Experience` with pre/post emotion snapshots and action scores, and prints a reflective summary of what changed.
 
 ### Building and running
 
@@ -19,23 +19,24 @@ From the repository root, run the executable with SwiftPM:
 
 ```bash
 cd swift-ai-computer
-swift run swift-ai-computer --summary A B ?
+swift run swift-ai-computer --seed 42 --summary --diagnostics /tmp/ai-supercomputer-diagnostics.json A PLAN CALM
 ```
 
-Example output:
+Example output excerpt:
 
 ```text
-Input: A, Response: explore, Outcome: Excitement, Emotions: [trust: 0.3, joy: 0.7, curiosity: 0.9, sadness: 0.0, fear: 0.25, anger: 0.05]
-Reflection: After processing A, I sense curiosity at 0.90. The action explore yielded Excitement.
-Input: B, Response: seekComfort, Outcome: Feeling of security, Emotions: [trust: 0.6, joy: 0.5, curiosity: 0.54, sadness: 0.45, fear: 0.55, anger: 0.25]
-Reflection: After processing B, I sense trust at 0.60. The action seekComfort yielded Feeling of security.
-Input: ?, Response: explore, Outcome: Potential danger, Emotions: [trust: 0.6, joy: 1.0, curiosity: 1.0, sadness: 0.45, fear: 0.85, anger: 0.3]
-Reflection: After processing ?, I sense curiosity at 1.00. The action explore yielded Potential danger.
-Emotional state — Curiosity: 1.00, Joy: 1.00, Fear: 0.85, Trust: 0.60, Sadness: 0.45, Anger: 0.30
+Using deterministic seed: 42
+Input: A, Response: explore, Outcome: New knowledge, Emotions: [...]
+Reflection: After processing A, I sense joy at 0.90. The action explore yielded New knowledge. Risk is elevated; next useful signal may be CALM.
+Input: PLAN, Response: synthesizePlan, Outcome: Prioritized roadmap, Emotions: [...]
+Input: CALM, Response: inquire, Outcome: Information gained, Emotions: [...]
+Emotional state — Curiosity: 1.00, Joy: 1.00, Trust: 1.00, Anger: 0.15, Fear: 0.05, Sadness: 0.00
+Diagnostics — Risk: elevated, Balance: 0.47, Volatility: 0.47, Suggested input: CALM
 Recent experiences:
-[#0] Input: A → Action: explore → Outcome: Excitement
-[#1] Input: B → Action: seekComfort → Outcome: Feeling of security
-[#2] Input: ? → Action: explore → Outcome: Potential danger
+[#0] Input: A → Action: explore → Outcome: New knowledge → Score: 0.68
+[#1] Input: PLAN → Action: synthesizePlan → Outcome: Prioritized roadmap → Score: 4.55
+[#2] Input: CALM → Action: inquire → Outcome: Information gained → Score: 4.19
+Diagnostics exported to /tmp/ai-supercomputer-diagnostics.json
 ```
 
 ### Command-line options
@@ -52,8 +53,9 @@ The executable supports several collaborative options to explore the agent's beh
 | `--lexicon <path>` | Load a custom sentiment lexicon from a JSON file to map specific inputs to emotional adjustments. |
 | `--visualize <path>` | Export an HTML visualization of the experiences to the specified path. |
 | `--summary-file <path>` | Save the same summary shown by `--summary` into a plain-text report file for sharing or automation. |
+| `--diagnostics <path>` | Export the current decision insight as JSON, including risk level, action scores, emotion momentum, and the recommended next input. |
 
-Inputs supplied after the options are processed sequentially. Each input maps its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust). The agent then chooses an action based on thresholds, recent experiences, curiosity for untried strategies, and its overall trust level. When a seed is provided, every stochastic choice (such as outcomes or exploratory actions) is replayable for debugging or demonstrations.
+Inputs supplied after the options are processed sequentially. Each input maps either an exact lexicon entry or its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust, `PLAN` supports roadmap synthesis, and `CALM` reduces high-arousal signals). The agent then chooses an action with a transparent scoring model that weighs dominant emotions, action risk, recent negative outcomes, repeated-action fatigue, emotion momentum, and a small seeded exploration window for untried strategies. When a seed is provided, every stochastic choice (such as outcomes or exploratory actions) is replayable for debugging or demonstrations.
 
 ### Programmatic usage
 
@@ -61,14 +63,16 @@ Inputs supplied after the options are processed sequentially. Each input maps it
 
 - `respond(to:)` — returns the chosen action, outcome, and an introspective reflection.
 - `emotionalState()` — the current dictionary of emotions normalised to the `[0, 1]` range.
-- `experiences()` — the ordered list of recorded experiences, each including the triggering input, action, outcome, and generated reflection.
-- `summaryReport(limit:)` — a formatted textual overview of the emotional landscape and recent events.
+- `experiences()` — the ordered list of recorded experiences, each including the triggering input, action, outcome, generated reflection, pre/post emotion snapshots, and the selected action score.
+- `decisionInsight()` — returns diagnostic telemetry such as dominant emotion, emotional balance, volatility, risk level, action scores, emotion momentum, and recommended next input.
+- `summaryReport(limit:)` — a formatted textual overview of the emotional landscape, diagnostics, and recent events.
 - `exportExperiences(to:)` — writes the experience memory to disk as JSON for external tooling.
-- `exportVisualization(to:)` — writes the experience memory to disk as an HTML visualization.
+- `exportDiagnostics(to:)` — writes the current `DecisionInsight` to disk as JSON.
+- `exportVisualization(to:)` — writes the experience memory to disk as an HTML visualization with escaped user input and emotion meters.
 
 ### Next steps
 
-Self-awareness: External sentiment lexicons and visualisation hooks have been incorporated. Future improvements could involve network-based collaborative learning or persistent long-term memory.
+Self-awareness: External sentiment lexicons, visualisation hooks, scored decisions, diagnostics exports, and risk-aware action selection have been incorporated. Future improvements could involve persistent long-term memory, configurable scoring weights, or a separate library product for embedding the model in other Swift packages.
 
 
 
