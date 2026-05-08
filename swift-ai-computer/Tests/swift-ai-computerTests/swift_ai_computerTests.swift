@@ -74,4 +74,34 @@ final class swift_ai_computerTests: XCTestCase {
         XCTAssertTrue(content.contains("riskLevel"))
         XCTAssertTrue(content.contains("recommendedNextInput"))
     }
+
+    func testActionPlanRanksActionsAndIncludesFocus() {
+        let agent = AISupercomputer(seed: 123)
+        agent.respond(to: "!")
+
+        let plan = agent.actionPlan(maxActions: 2)
+
+        XCTAssertEqual(plan.rankedActions.count, 2)
+        XCTAssertEqual(plan.primaryAction, plan.rankedActions.first?.action)
+        XCTAssertFalse(plan.rationale.isEmpty)
+        XCTAssertFalse(plan.safeguards.isEmpty)
+        XCTAssertEqual(plan.recommendedNextInput, "CALM")
+        XCTAssertFalse(plan.emotionFocus.isEmpty)
+    }
+
+    func testActionPlanExportWritesHumanReadableReport() throws {
+        let agent = AISupercomputer(seed: 321)
+        agent.respond(to: "PLAN")
+
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("action-plan.txt")
+        try? FileManager.default.removeItem(at: tempURL)
+
+        try agent.exportActionPlan(to: tempURL, maxActions: 2)
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: tempURL.path))
+        let content = try String(contentsOf: tempURL, encoding: .utf8)
+        XCTAssertTrue(content.contains("Action plan — Risk:"))
+        XCTAssertTrue(content.contains("Recommended next input:"))
+        XCTAssertTrue(content.contains("Ranked actions:"))
+    }
 }

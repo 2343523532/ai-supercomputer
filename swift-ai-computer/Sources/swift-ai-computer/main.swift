@@ -11,6 +11,7 @@ struct CLIOptions {
     var visualizationPath: String?
     var summaryPath: String?
     var diagnosticsPath: String?
+    var planPath: String?
 }
 
 private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [String]) {
@@ -80,6 +81,14 @@ private func parseCLIOptions(arguments: ArraySlice<String>) -> (CLIOptions, [Str
                 index = nextIndex
             } else {
                 print("Warning: --diagnostics requires a file path. Ignoring option.")
+            }
+        case "--plan-file":
+            let nextIndex = arguments.index(after: index)
+            if nextIndex < arguments.endIndex {
+                options.planPath = arguments[nextIndex]
+                index = nextIndex
+            } else {
+                print("Warning: --plan-file requires a file path. Ignoring option.")
             }
         default:
             inputs.append(argument)
@@ -176,7 +185,6 @@ if let path = options.summaryPath {
     }
 }
 
-
 if let path = options.diagnosticsPath {
     let url = URL(fileURLWithPath: path)
     do {
@@ -184,5 +192,15 @@ if let path = options.diagnosticsPath {
         print("Diagnostics exported to \(url.path)")
     } catch {
         print("Failed to export diagnostics: \(error)")
+    }
+}
+
+if let path = options.planPath {
+    let url = URL(fileURLWithPath: path)
+    do {
+        try agent.exportActionPlan(to: url)
+        print("Action plan exported to \(url.path)")
+    } catch {
+        print("Failed to export action plan: \(error)")
     }
 }

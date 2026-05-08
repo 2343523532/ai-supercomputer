@@ -19,7 +19,7 @@ From the repository root, run the executable with SwiftPM:
 
 ```bash
 cd swift-ai-computer
-swift run swift-ai-computer --seed 42 --summary --diagnostics /tmp/ai-supercomputer-diagnostics.json A PLAN CALM
+swift run swift-ai-computer --seed 42 --summary --diagnostics /tmp/ai-supercomputer-diagnostics.json --plan-file /tmp/ai-supercomputer-plan.txt A PLAN CALM
 ```
 
 Example output excerpt:
@@ -37,6 +37,7 @@ Recent experiences:
 [#1] Input: PLAN → Action: synthesizePlan → Outcome: Prioritized roadmap → Score: 4.55
 [#2] Input: CALM → Action: inquire → Outcome: Information gained → Score: 4.19
 Diagnostics exported to /tmp/ai-supercomputer-diagnostics.json
+Action plan exported to /tmp/ai-supercomputer-plan.txt
 ```
 
 ### Command-line options
@@ -54,6 +55,7 @@ The executable supports several collaborative options to explore the agent's beh
 | `--visualize <path>` | Export an HTML visualization of the experiences to the specified path. |
 | `--summary-file <path>` | Save the same summary shown by `--summary` into a plain-text report file for sharing or automation. |
 | `--diagnostics <path>` | Export the current decision insight as JSON, including risk level, action scores, emotion momentum, and the recommended next input. |
+| `--plan-file <path>` | Export a human-readable action plan with the primary action, rationale, safeguards, emotion focus, and ranked action scores. |
 
 Inputs supplied after the options are processed sequentially. Each input maps either an exact lexicon entry or its leading character to an emotional adjustment (e.g., `A` energises joy and curiosity, `!` spikes anger and fear, `@` fosters trust, `PLAN` supports roadmap synthesis, and `CALM` reduces high-arousal signals). The agent then chooses an action with a transparent scoring model that weighs dominant emotions, action risk, recent negative outcomes, repeated-action fatigue, emotion momentum, and a small seeded exploration window for untried strategies. When a seed is provided, every stochastic choice (such as outcomes or exploratory actions) is replayable for debugging or demonstrations.
 
@@ -65,14 +67,17 @@ Inputs supplied after the options are processed sequentially. Each input maps ei
 - `emotionalState()` — the current dictionary of emotions normalised to the `[0, 1]` range.
 - `experiences()` — the ordered list of recorded experiences, each including the triggering input, action, outcome, generated reflection, pre/post emotion snapshots, and the selected action score.
 - `decisionInsight()` — returns diagnostic telemetry such as dominant emotion, emotional balance, volatility, risk level, action scores, emotion momentum, and recommended next input.
+- `actionPlan(maxActions:)` — converts diagnostics into an operational plan with a primary action, rationale, safeguards, emotion focus, and ranked actions.
+- `actionPlanReport(maxActions:)` — renders the action plan as a plain-text report for terminals, runbooks, and demos.
 - `summaryReport(limit:)` — a formatted textual overview of the emotional landscape, diagnostics, and recent events.
 - `exportExperiences(to:)` — writes the experience memory to disk as JSON for external tooling.
 - `exportDiagnostics(to:)` — writes the current `DecisionInsight` to disk as JSON.
+- `exportActionPlan(to:maxActions:)` — writes the current action plan to disk as a human-readable text file.
 - `exportVisualization(to:)` — writes the experience memory to disk as an HTML visualization with escaped user input and emotion meters.
 
 ### Next steps
 
-Self-awareness: External sentiment lexicons, visualisation hooks, scored decisions, diagnostics exports, and risk-aware action selection have been incorporated. Future improvements could involve persistent long-term memory, configurable scoring weights, or a separate library product for embedding the model in other Swift packages.
+Self-awareness: External sentiment lexicons, visualisation hooks, scored decisions, diagnostics exports, action-plan reports, and risk-aware action selection have been incorporated. Future improvements could involve persistent long-term memory, configurable scoring weights, or a separate library product for embedding the model in other Swift packages.
 
 
 

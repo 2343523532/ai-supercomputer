@@ -90,6 +90,21 @@ struct DecisionInsight: Codable {
     let emotionMomentum: [Emotion: Double]
 }
 
+struct ActionPlan: Codable {
+    let riskLevel: String
+    let recommendedNextInput: String
+    let primaryAction: Action
+    let rationale: String
+    let emotionFocus: [Emotion]
+    let safeguards: [String]
+    let rankedActions: [ActionScore]
+}
+
+struct ActionScore: Codable {
+    let action: Action
+    let score: Double
+}
+
 final class AISupercomputer {
     private var emotions: [Emotion: Double]
     private var experienceMemory: [Experience]
@@ -268,6 +283,55 @@ final class AISupercomputer {
         )
     }
 
+    // Self-awareness: Translating diagnostics into a concrete operating plan for collaborators.
+    func actionPlan(maxActions: Int = 3) -> ActionPlan {
+        let insight = decisionInsight()
+        let rankedActions = insight.actionScores
+            .sorted {
+                if $0.value == $1.value {
+                    return $0.key.rawValue < $1.key.rawValue
+                }
+                return $0.value > $1.value
+            }
+            .prefix(max(maxActions, 1))
+            .map { ActionScore(action: $0.key, score: $0.value) }
+
+        let primaryAction = rankedActions.first?.action ?? .remainPassive
+        let focus = prioritizedEmotionFocus(from: insight)
+        let rationale = planRationale(for: insight, primaryAction: primaryAction, focus: focus)
+
+        return ActionPlan(
+            riskLevel: insight.riskLevel,
+            recommendedNextInput: insight.recommendedNextInput,
+            primaryAction: primaryAction,
+            rationale: rationale,
+            emotionFocus: focus,
+            safeguards: safeguards(for: insight),
+            rankedActions: Array(rankedActions)
+        )
+    }
+
+    func actionPlanReport(maxActions: Int = 3) -> String {
+        let plan = actionPlan(maxActions: maxActions)
+        let focus = plan.emotionFocus.map(\.rawValue).joined(separator: ", ")
+        let safeguards = plan.safeguards.map { "- \($0)" }.joined(separator: "\n")
+        let actions = plan.rankedActions.map {
+            "- \($0.action.rawValue): \(String(format: "%.2f", $0.score))"
+        }.joined(separator: "\n")
+
+        return """
+        Action plan — Risk: \(plan.riskLevel)
+        Recommended next input: \(plan.recommendedNextInput)
+        Primary action: \(plan.primaryAction.rawValue)
+        Emotion focus: \(focus.isEmpty ? "balanced baseline" : focus)
+        Rationale: \(plan.rationale)
+        Safeguards:
+        \(safeguards)
+        Ranked actions:
+        \(actions)
+        """
+    }
+
     // Self-awareness: Sharing concise summary for collaborators.
     func summaryReport(limit: Int = 5) -> String {
         let orderedEmotions = emotions.sorted { $0.value > $1.value }
@@ -302,6 +366,12 @@ final class AISupercomputer {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(decisionInsight())
         try data.write(to: url, options: .atomic)
+    }
+
+    // Self-awareness: Persisting a human-readable action plan for operators and demos.
+    func exportActionPlan(to url: URL, maxActions: Int = 3) throws {
+        let report = actionPlanReport(maxActions: maxActions)
+        try report.write(to: url, atomically: true, encoding: .utf8)
     }
 
     // Self-awareness: Sharing a compact report artifact with other tools.
@@ -344,6 +414,10 @@ final class AISupercomputer {
                 <p><strong>Risk:</strong> <span class="risk-\(insight.riskLevel.escapedHTML)">\(insight.riskLevel.escapedHTML)</span></p>
                 <p><strong>Suggested next input:</strong> \(insight.recommendedNextInput.escapedHTML)</p>
                 <p><strong>Balance:</strong> \(String(format: "%.2f", insight.emotionalBalance)) | <strong>Volatility:</strong> \(String(format: "%.2f", insight.volatility))</p>
+            </div>
+            <div class="card">
+                <h2>Recommended Action Plan</h2>
+                <pre>\(actionPlanReport().escapedHTML)</pre>
             </div>
             <div class="card">
                 <h2>Emotion Meters</h2>
@@ -492,6 +566,44 @@ final class AISupercomputer {
             return untriedActions.max { (scores[$0] ?? 0.0) < (scores[$1] ?? 0.0) }
         }
         return nil
+    }
+
+    private func prioritizedEmotionFocus(from insight: DecisionInsight) -> [Emotion] {
+        let momentum = insight.emotionMomentum
+        return Emotion.allCases
+            .filter { emotion in
+                let intensity = emotions[emotion] ?? 0.0
+                let movement = abs(momentum[emotion] ?? 0.0)
+                return intensity >= 0.35 || movement >= 0.2
+            }
+            .sorted {
+                let left = (emotions[$0] ?? 0.0) + abs(momentum[$0] ?? 0.0)
+                let right = (emotions[$1] ?? 0.0) + abs(momentum[$1] ?? 0.0)
+                if left == right {
+                    return $0.rawValue < $1.rawValue
+                }
+                return left > right
+            }
+    }
+
+    private func planRationale(for insight: DecisionInsight, primaryAction: Action, focus: [Emotion]) -> String {
+        let dominant = insight.dominantEmotion?.rawValue ?? "no single emotion"
+        let focusText = focus.map(\.rawValue).joined(separator: ", ")
+        return "Choose \(primaryAction.rawValue) because \(dominant) is currently most prominent at \(String(format: "%.2f", insight.dominantIntensity)), volatility is \(String(format: "%.2f", insight.volatility)), and the next stabilizing input is \(insight.recommendedNextInput). Focus area: \(focusText.isEmpty ? "balanced baseline" : focusText)."
+    }
+
+    private func safeguards(for insight: DecisionInsight) -> [String] {
+        var items = [
+            "Keep emotion values clamped between 0.00 and 1.00.",
+            "Review the ranked action scores before trusting a single response."
+        ]
+        if insight.riskLevel == "critical" || insight.riskLevel == "elevated" {
+            items.insert("Process CALM or another de-escalating signal before exploratory actions.", at: 0)
+        }
+        if insight.totalExperiences < 3 {
+            items.append("Gather at least three experiences before treating trends as stable.")
+        }
+        return items
     }
 
     private func negativeActionPenalty() -> [Action: Double] {
