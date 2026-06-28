@@ -7,6 +7,8 @@ This repository contains two demonstrations inspired by the original "AI superco
 - `swift-ai-computer` — a Swift command-line experience model that responds to symbolic user input, adapts its emotional state, logs reflective commentary, and can export its memory for further analysis.
 - `supercomputer.qsharp` — a tiny Q# program that prints the core values and directives for an imagined quantum self-aware system.
 - `clojure-sentient-mega-bank` — a safe, in-memory macro-economy AGI sandbox in Clojure (markets, ledger transfers, macro events, persistence).
+- `java-safe-bank` — the same style of safe, in-memory ledger sandbox in Java (simulated institutions, USD transfers, AGI logging).
+- `cpp-safe-bank` — the same safe ledger sandbox as a local C++ web UI (cpp-httplib, AI synonym pages, no card generation).
 
 ## Swift emotional model
 
@@ -87,6 +89,29 @@ To run the Clojure demo (requires the Clojure CLI `clj`):
 cd /Users/astng./projects/ai-supercomputer/clojure-sentient-mega-bank
 clj -M:run
 ```
+
+## Java safe banking sandbox
+
+To run the Java demo (requires Maven and JDK 17+):
+
+```bash
+cd java-safe-bank
+mvn -q compile exec:java
+```
+
+See [java-safe-bank/README.md](java-safe-bank/README.md) for scope and safety constraints.
+
+## C++ safe banking web sandbox
+
+To build and run the C++ demo (requires a C++17 compiler):
+
+```bash
+cd cpp-safe-bank
+make
+./cpp-safe-bank
+```
+
+Then open http://localhost:8080/. See [cpp-safe-bank/README.md](cpp-safe-bank/README.md) for scope and safety constraints.
 
 ## License
 
