@@ -1,23 +1,12 @@
-cmake_minimum_required(VERSION 3.14)
-project(cpp-safe-bank CXX)
+cmake_minimum_required(VERSION 3.16)
+project(cpp_safe_bank LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(FetchContent)
-FetchContent_Declare(
-  cpp_httplib
-  GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
-  GIT_TAG v0.18.3
-)
-FetchContent_GetProperties(cpp_httplib)
-if(NOT cpp_httplib_POPULATED)
-  FetchContent_Populate(cpp_httplib)
-endif()
+add_executable(cpp-safe-bank main.cpp)
+target_include_directories(cpp-safe-bank PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(cpp-safe-bank src/main.cpp)
-target_include_directories(cpp-safe-bank PRIVATE ${cpp_httplib_SOURCE_DIR})
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(cpp-safe-bank PRIVATE -Wall -Wextra -Wpedantic)
+if(APPLE)
+  target_link_libraries(cpp-safe-bank PRIVATE "-framework CoreFoundation" "-framework Security")
 endif()

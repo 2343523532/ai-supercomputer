@@ -4,3 +4,7 @@ swiftly-*.tar.gz
 LICENSE.txt
 .local/
 ai-state.json
+
+# C++ build artifacts
+cpp-safe-bank/build/
+cpp-safe-bank/cpp-safe-bank

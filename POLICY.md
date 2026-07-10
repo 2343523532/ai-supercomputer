@@ -20,6 +20,7 @@ A mock banking system for learning Common Lisp could include:
 - [bank-sim/safe-sentient-bank.lisp](bank-sim/safe-sentient-bank.lisp) — Safe Sentient Mega Bank (basic AGI + simulated transfers)
 - [bank-sim/sentient-mega-bank.lisp](bank-sim/sentient-mega-bank.lisp) — **V2.0 Ultimate AGI Edition** (large-scale safe simulation)
 - [java-safe-bank](java-safe-bank/) — Java in-memory ledger sandbox (Maven, JDK 17+)
+- [cpp-safe-bank](cpp-safe-bank/) — C++ educational web UI with in-memory ledger (CMake, C++17+)
 
 ### Sentient Mega Bank V2.0 — Features & Safety
 
